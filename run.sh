@@ -1,2 +1,2 @@
-gcc -Wall -Wextra agl.c -o agl
+gcc -Wall -Wextra agl.c comandos.c -o agl
 ./agl teste.agl
