@@ -79,6 +79,7 @@ int main(int argc, char *argv[]){
         printf("%s", linhas[i]);
     }
     printf("\n%d\n", quantLinhas);
+    // teste
 
     // próximo passo: tokenizar cada linha aqui
 
