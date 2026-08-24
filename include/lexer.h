@@ -13,4 +13,11 @@ typedef struct {
     char *valor;
 } Token;
 
+typedef struct {
+    Token *tokens;
+    int quantidade;
+    int numLinha;
+} Instrucao;
+
+
 #endif

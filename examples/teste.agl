@@ -1,0 +1,25 @@
+# criando diretorios principais 
+$ start
+
+create dir src
+create dir projeto in src/
+
+$ stop
+
+# estruturando projeto dentro do criado
+$ start into src/projeto/
+
+venv create .venv
+venv active
+
+create dir teste
+create file teste.py in teste
+
+git init
+git ignr
+
+bash > ls -la
+
+print "Projeto inicializado"
+
+$ stop
