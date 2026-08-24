@@ -21,6 +21,7 @@ int main(int argc, char *argv[]){
 
     EstadoExecucao estado = PARADO;
     int numLinha = 1;
+    
     while (fgets(linha, 1000, file) != NULL && estado != INTERROMPIDO){
         identificar_comando(linha, &estado, numLinha);
         numLinha++;
