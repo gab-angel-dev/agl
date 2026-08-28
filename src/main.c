@@ -69,19 +69,15 @@ int main(int argc, char *argv[]){
     int quantLinhas = 0;
     char **linhas = ler_arquivo(file, &quantLinhas);
 
-    fclose(file); // já podemos fechar o arquivo — todo o conteúdo já está em memória
+    fclose(file);
 
     if (linhas == NULL) {
-        return 1; // ler_arquivo já imprimiu o erro
+        return 1; 
     }
 
-    for (int i = 0; i < quantLinhas; i++){
-        printf("%s", linhas[i]);
-    }
-    printf("\n%d\n", quantLinhas);
-    // teste
+    // TOKENIZAR
 
-    // próximo passo: tokenizar cada linha aqui
+    
 
     for (int i = 0; i < quantLinhas; i++){
         free(linhas[i]);

@@ -10,5 +10,6 @@ typedef enum {
 
 int identificar_comando(char *linha, EstadoExecucao *estado, int numLinha);
 int executar_print(char *linha, EstadoExecucao *estado, int numLinha);
+char *pular_espacos(char *linha);
 
 #endif

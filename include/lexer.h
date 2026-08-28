@@ -19,5 +19,12 @@ typedef struct {
     int numLinha;
 } Instrucao;
 
+typedef enum {
+    ERRO_NENHUM,
+    ERRO_MEMORIA,
+    ERRO_ASPAS_NAO_FECHADAS
+} ErroLexer;
+
+Token *tokenizar(char *linha, int *quantidadeTokens, ErroLexer *erro);
 
 #endif
