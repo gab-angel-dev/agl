@@ -3,13 +3,6 @@
 #include <stdlib.h>
 #include "comandos.h"
 
-void liberar_tokens(Token *tokens, int total){
-    for (int i = 0; i < total; i++) {
-        free(tokens[i].valor);
-    }
-    free(tokens);
-}
-
 char *extrair_ate(char *inicio, int tamanho){
     char *valor = malloc(tamanho * sizeof(char) + 1);
 
@@ -25,6 +18,14 @@ char *extrair_ate(char *inicio, int tamanho){
     valor[tamanho] = '\0';
 
     return valor;
+}
+
+
+void liberar_tokens(Token *tokens, int total){
+    for (int i = 0; i < total; i++) {
+        free(tokens[i].valor);
+    }
+    free(tokens);
 }
 
 
@@ -88,6 +89,12 @@ Token *tokenizar(char *linha, int *quantidadeTokens, ErroLexer *erro) {
             linha += quantCaracteres + 1;
 
         }
+        
+        else if (*linha == '#'){
+            *quantidadeTokens = total;
+            return tokens;
+        }
+
         else {
             int quantCaracteres = 0;
             while (linha[quantCaracteres] != '\n' && linha[quantCaracteres] != '\0' && linha[quantCaracteres] != '"' && linha[quantCaracteres] != ' '){
@@ -114,4 +121,63 @@ Token *tokenizar(char *linha, int *quantidadeTokens, ErroLexer *erro) {
 
     *quantidadeTokens = total;
     return tokens;
+}
+
+Instrucao *montar_instrucoes(char **linhas, int quantidadeLinhas, int *quantidadeInstrucoes, ErroLexer *erro){
+    int capacidade = 4;
+    int total = 0;
+
+    Instrucao *instrucoes = malloc(capacidade * sizeof(Instrucao));
+
+    if (instrucoes == NULL){
+        printf("ERRO: sem memória");
+        return NULL;
+    }
+
+    for (int i = 0; i < quantidadeLinhas; i ++){
+        if (total == capacidade){
+            capacidade *= 2;
+            Instrucao *temp = realloc(instrucoes, capacidade * sizeof(Instrucao));
+
+            if (temp == NULL){
+                *erro = ERRO_MEMORIA;
+                for (int i = 0; i < total; i++){
+                    liberar_tokens(instrucoes[i].tokens, instrucoes[i].quantidade);
+                }
+                free(instrucoes);
+                return NULL;
+            }
+            instrucoes = temp;
+        }
+
+        Instrucao novaInstrucao;
+        
+        int quantidadeTokens, numLinha = i + 1;
+        Token *tokens = tokenizar(linhas[i], &quantidadeTokens, erro);
+
+        if (tokens == NULL){
+            for (int i = 0; i < total; i++){
+                liberar_tokens(instrucoes[i].tokens, instrucoes[i].quantidade);
+            }
+            free(instrucoes);
+            return NULL;
+        }
+
+        novaInstrucao.tokens = tokens;
+        novaInstrucao.quantidade = quantidadeTokens;
+        novaInstrucao.numLinha = numLinha;
+
+        instrucoes[total] = novaInstrucao;
+        total++;
+    }
+
+    *quantidadeInstrucoes = total;
+    return instrucoes;
+}
+
+void liberar_instrucoes(Instrucao *instrucoes, int total){
+    for (int i = 0; i < total; i++){
+        liberar_tokens(instrucoes[i].tokens, instrucoes[i].quantidade);
+    }
+    free(instrucoes);
 }

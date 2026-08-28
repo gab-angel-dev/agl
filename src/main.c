@@ -76,14 +76,20 @@ int main(int argc, char *argv[]){
     }
 
     // TOKENIZAR
+    int quantInstrucoes;
+    ErroLexer codigoErro = ERRO_NENHUM;
+    Instrucao *instrucoes = montar_instrucoes(linhas, quantLinhas, &quantInstrucoes, &codigoErro);
 
-    
+    for (int i = 0; i < quantInstrucoes; i++) {
+        for (int j = 0; j < instrucoes[i].quantidade; j++ ){
+            printf("Intrução: %d    Token %d:   tipo=%d     valor=%s\n", i, j, instrucoes[i].tokens[j].tipo, instrucoes[i].tokens[j].valor);
+        }
+    }
 
     for (int i = 0; i < quantLinhas; i++){
         free(linhas[i]);
     }
 
-    
 
     free(linhas);
 

@@ -26,5 +26,7 @@ typedef enum {
 } ErroLexer;
 
 Token *tokenizar(char *linha, int *quantidadeTokens, ErroLexer *erro);
+Instrucao *montar_instrucoes(char **linhas, int quantidadeLinhas, int *quantidadeInstrucoes, ErroLexer *erro);
+void liberar_instrucoes(Instrucao *instrucoes, int total);
 
 #endif
