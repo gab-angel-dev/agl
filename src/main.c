@@ -86,6 +86,10 @@ int main(int argc, char *argv[]){
         }
     }
 
+    
+
+    liberar_instrucoes(instrucoes, quantInstrucoes);
+
     for (int i = 0; i < quantLinhas; i++){
         free(linhas[i]);
     }
