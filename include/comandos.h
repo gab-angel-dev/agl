@@ -1,15 +1,12 @@
 #ifndef COMANDOS_H
 #define COMANDOS_H
 
-typedef enum {
-    PARADO,
-    RODANDO,
-    INTERROMPIDO
-} EstadoExecucao;
+#include "lexer.h"
+#include "executor.h"
 
-
-int identificar_comando(char *linha, EstadoExecucao *estado, int numLinha);
-int executar_print(char *linha, EstadoExecucao *estado, int numLinha);
-char *pular_espacos(char *linha);
+// Retorna 0 = ok, 1 = erro
+int cmd_create(const Instrucao *ins, Contexto *ctx);
+int cmd_print(const Instrucao *ins, Contexto *ctx);
+int cmd_bash(const Instrucao *ins, Contexto *ctx);
 
 #endif

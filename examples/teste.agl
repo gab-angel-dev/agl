@@ -23,3 +23,6 @@ bash > ls -la
 print "Projeto inicializado"
 
 $ stop
+# comentário 
+create dir teste
+

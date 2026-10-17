@@ -2,10 +2,9 @@
 #define LEXER_H
 
 typedef enum {
+    TOKEN_SIMBOLO,
     TOKEN_PALAVRA,
-    TOKEN_STRING,
-    TOKEN_FIM_LINHA,
-    TOKEN_DESCONHECIDO
+    TOKEN_STRING
 } TipoToken;
 
 typedef struct {

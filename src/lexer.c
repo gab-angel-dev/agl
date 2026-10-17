@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include "lexer.h"
 #include <stdlib.h>
-#include "comandos.h"
+#include <ctype.h>
 
 char *extrair_ate(char *inicio, int tamanho){
     char *valor = malloc(tamanho * sizeof(char) + 1);
@@ -28,6 +28,12 @@ void liberar_tokens(Token *tokens, int total){
     free(tokens);
 }
 
+static char *pular_espacos(char *linha) {
+    while (*linha != '\n' && isspace((unsigned char)*linha)) {
+        linha++;
+    }
+    return linha;
+}
 
 Token *tokenizar(char *linha, int *quantidadeTokens, ErroLexer *erro) {
     *erro = ERRO_NENHUM;
@@ -95,9 +101,30 @@ Token *tokenizar(char *linha, int *quantidadeTokens, ErroLexer *erro) {
             return tokens;
         }
 
+        else if (*linha == '$' || *linha == '<' || *linha == '>') {
+            char *valor = extrair_ate(linha, 1);
+            if (valor == NULL) {
+                *erro = ERRO_MEMORIA;
+                liberar_tokens(tokens, total);
+                return NULL;
+            }
+
+            novoToken.tipo = TOKEN_SIMBOLO;
+            novoToken.valor = valor;
+
+            linha += 1;
+        }
+
         else {
             int quantCaracteres = 0;
-            while (linha[quantCaracteres] != '\n' && linha[quantCaracteres] != '\0' && linha[quantCaracteres] != '"' && linha[quantCaracteres] != ' '){
+            while (linha[quantCaracteres] != '\n' &&
+                linha[quantCaracteres] != '\0' &&
+                linha[quantCaracteres] != '"'  &&
+                linha[quantCaracteres] != '#'  &&
+                !isspace((unsigned char)linha[quantCaracteres]) &&
+                linha[quantCaracteres] != '$'  &&
+                linha[quantCaracteres] != '<'  &&
+                linha[quantCaracteres] != '>') {
                 quantCaracteres++;
             }
 
@@ -156,8 +183,14 @@ Instrucao *montar_instrucoes(char **linhas, int quantidadeLinhas, int *quantidad
         Token *tokens = tokenizar(linhas[i], &quantidadeTokens, erro);
 
         if (tokens == NULL){
-            for (int i = 0; i < total; i++){
-                liberar_tokens(instrucoes[i].tokens, instrucoes[i].quantidade);
+            if (*erro == ERRO_ASPAS_NAO_FECHADAS) {
+                printf("Erro de Sintaxe: linha %d: aspas não fechadas\n", numLinha);
+            } else if (*erro == ERRO_MEMORIA) {
+                printf("Erro: sem memória!\n");
+            }
+
+            for (int k = 0; k < total; k++){
+                liberar_tokens(instrucoes[k].tokens, instrucoes[k].quantidade);
             }
             free(instrucoes);
             return NULL;

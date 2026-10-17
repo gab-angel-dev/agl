@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Wall -Wextra -Iinclude
+CFLAGS = -Wall -Wextra -Iinclude -MMD -MP
 SRC_DIR = src
 OBJ_DIR = obj
 BIN = agl
@@ -13,6 +13,8 @@ $(BIN): $(OBJS)
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 	mkdir -p $(OBJ_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
+
+-include $(OBJS:.o=.d)
 
 clean:
 	rm -rf $(OBJ_DIR) $(BIN)

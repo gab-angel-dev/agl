@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "comandos.h"
 #include "lexer.h"
+#include "executor.h"
 
 char **ler_arquivo(FILE *file, int *quantidadeLinhas) {
     int capacidade = 4;              // quantas linhas cabem hoje no array
@@ -72,30 +72,32 @@ int main(int argc, char *argv[]){
     fclose(file);
 
     if (linhas == NULL) {
-        return 1; 
+        return 1;
     }
 
     // TOKENIZAR
-    int quantInstrucoes;
+    int quantInstrucoes = 0;
     ErroLexer codigoErro = ERRO_NENHUM;
     Instrucao *instrucoes = montar_instrucoes(linhas, quantLinhas, &quantInstrucoes, &codigoErro);
 
-    for (int i = 0; i < quantInstrucoes; i++) {
-        for (int j = 0; j < instrucoes[i].quantidade; j++ ){
-            printf("Intrução: %d    Token %d:   tipo=%d     valor=%s\n", i, j, instrucoes[i].tokens[j].tipo, instrucoes[i].tokens[j].valor);
+    if (instrucoes == NULL) {
+        for (int i = 0; i < quantLinhas; i++) {
+            free(linhas[i]);
         }
+        free(linhas);
+        return 1;
     }
 
-    
+    // EXECUTAR
+    int status = executar(instrucoes, quantInstrucoes);
 
+    // LIBERAR
     liberar_instrucoes(instrucoes, quantInstrucoes);
 
     for (int i = 0; i < quantLinhas; i++){
         free(linhas[i]);
     }
-
-
     free(linhas);
 
-    return 0;
+    return status;
 }
