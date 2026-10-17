@@ -1,0 +1,25 @@
+# descricao: Projeto de dados em Python (pandas, notebooks, pipeline e testes)
+
+$ start
+
+create dir data/raw, data/interim, data/processed
+create dir notebooks, reports/figures, src, tests
+
+create file __init__.py in src
+create file pipeline.py in src
+create file test_pipeline.py in tests
+
+bash > printf 'from pathlib import Path\n\nROOT = Path(__file__).resolve().parents[1]\nDATA_RAW = ROOT / "data" / "raw"\nDATA_INTERIM = ROOT / "data" / "interim"\nDATA_PROCESSED = ROOT / "data" / "processed"\n' > src/config.py
+bash > printf 'pandas\nnumpy\nmatplotlib\njupyter\npytest\n' > requirements.txt
+bash > printf '# Projeto de dados\n\nEstrutura gerada pelo agl (template data-python).\n' > README.md
+
+venv create .venv
+
+git init
+git ignr
+bash > printf '\n# Dados\ndata/raw/\ndata/interim/\ndata/processed/\n' >> .gitignore
+
+print "Template data-python criado."
+print "Proximo passo: source .venv/bin/activate && pip install -r requirements.txt"
+
+$ stop

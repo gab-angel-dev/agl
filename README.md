@@ -1,3 +1,14 @@
+# Uso
+```
+agl run <arquivo.agl>     executa a partir do diretório atual
+agl run template <nome>   executa um template embutido
+agl templates             lista os templates e descrições
+agl check <arquivo.agl>   só valida a sintaxe
+agl version | agl help
+```
+Comandos só funcionam entre `$ start` e `$ stop`.
+Saída: `+` criado, `=` já existia, `~` venv.
+
 # Simbolos
 ================================================================================================
 #: símbolo de comentário 
@@ -7,7 +18,8 @@
 $: símbolo de controle de fluxo
 
 1. start: inicia o fluxo mas podendo aceitar parâmetros:
-- into: diz o caminho que aquele arquivo tem que rodar, se não especificado ele roda no diretorio onde se encontra o .agl
+- into: diz em qual pasta o bloco roda (criada automaticamente se não existir). Relativo ao diretório de onde você rodou o `agl run`, ou absoluto.
+- sem `into`: o bloco roda no diretório atual de quem executou o `agl run`
 ex: $ start into src/projeto/
 
 1. stop: encerra o bloco de instruções
@@ -51,8 +63,9 @@ venv: comando de manipular a venv
 ex: venv create .venv
 ex: venv create .venv in dir/projeto
 
-2. active: para ativar a venv
+2. active: ativa a venv (vale para os `bash >` seguintes, até `venv deactive` ou `$ stop`). Sem nome usa a última criada, ou `.venv`
 ex: venv active
+ex: venv active .venv in dir/projeto
 
 3. deactive: desativa a venv
 ex: venv deactive
@@ -71,8 +84,8 @@ ex: git ignr
 
 ================================================================================================
 bash: comando que roda algo no terminal
-seguido pelo simbolo > para determinar o comando do terminal
-ex: bash > python3 -m main.py 
+seguido pelo simbolo > ; o resto da linha vai direto para o shell (roda na base do bloco; falhou = o script para)
+ex: bash > python3 main.py 
 
 
 ================================================================================================
@@ -112,3 +125,17 @@ bash > ls -la
 print "Projeto inicializado"
 
 $ stop
+
+
+# Templates
+================================================================================================
+Arquivos `.agl` em `templates/` são embutidos no binário no `make`. A descrição que aparece em
+`agl templates` vem da primeira linha do arquivo:
+
+```
+# descricao: Projeto de dados em Python
+$ start
+...
+```
+
+Para criar um template novo: adicione `templates/<nome>.agl` e rode `make`.

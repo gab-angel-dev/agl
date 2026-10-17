@@ -1,0 +1,27 @@
+# descricao: Projeto de agentes em Python com LangChain/LangGraph (agents, tools, graphs, prompts)
+
+$ start
+
+create dir src/agents, src/tools, src/graphs, src/prompts
+create dir configs, tests
+
+create file __init__.py, main.py in src
+create file __init__.py, researcher.py in src/agents
+create file __init__.py, search.py in src/tools
+create file __init__.py, workflow.py in src/graphs
+create file system.md in src/prompts
+create file test_agents.py in tests
+
+bash > printf 'langchain\nlanggraph\nlangchain-openai\npython-dotenv\npydantic\npytest\n' > requirements.txt
+bash > printf 'OPENAI_API_KEY=\nLANGSMITH_API_KEY=\n' > .env.example
+bash > printf '# Projeto de agentes\n\nEstrutura gerada pelo agl (template agents-python).\nCopie .env.example para .env e preencha as chaves.\n' > README.md
+
+venv create .venv
+
+git init
+git ignr
+
+print "Template agents-python criado."
+print "Proximo passo: source .venv/bin/activate && pip install -r requirements.txt"
+
+$ stop

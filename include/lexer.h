@@ -2,9 +2,10 @@
 #define LEXER_H
 
 typedef enum {
-    TOKEN_SIMBOLO,
-    TOKEN_PALAVRA,
-    TOKEN_STRING
+    TOKEN_SIMBOLO,   // $  ,  >
+    TOKEN_PALAVRA,   // create, dir, src/projeto/ ...
+    TOKEN_STRING,    // "texto entre aspas" (sem as aspas)
+    TOKEN_BRUTO      // resto da linha depois de '>' (comando de shell)
 } TipoToken;
 
 typedef struct {

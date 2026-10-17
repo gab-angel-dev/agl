@@ -1,33 +1,28 @@
 #include <stdio.h>
-#include "lexer.h"
 #include <stdlib.h>
+#include <string.h>
 #include <ctype.h>
+#include "lexer.h"
+#include "util.h"
 
-char *extrair_ate(char *inicio, int tamanho){
-    char *valor = malloc(tamanho * sizeof(char) + 1);
-
-    if (valor == NULL){
-        printf("Erro: sem memória\n");
+static char *extrair_ate(const char *inicio, int tamanho) {
+    char *valor = malloc((size_t)tamanho + 1);
+    if (valor == NULL) {
         return NULL;
     }
-
-    for (int i = 0; i < tamanho; i++){
-        valor[i] = inicio[i];
-    }
-
+    memcpy(valor, inicio, (size_t)tamanho);
     valor[tamanho] = '\0';
-
     return valor;
 }
 
-
-void liberar_tokens(Token *tokens, int total){
+static void liberar_tokens(Token *tokens, int total) {
     for (int i = 0; i < total; i++) {
         free(tokens[i].valor);
     }
     free(tokens);
 }
 
+// Pula espaços/tabs/\r, mas NÃO o '\n' (ele marca o fim da linha).
 static char *pular_espacos(char *linha) {
     while (*linha != '\n' && isspace((unsigned char)*linha)) {
         linha++;
@@ -35,12 +30,42 @@ static char *pular_espacos(char *linha) {
     return linha;
 }
 
+// Acrescenta um token. Assume a posse de 'valor' (libera se falhar). 0 ok, 1 falha.
+static int adicionar(Token **tokens, int *total, int *capacidade, TipoToken tipo, char *valor) {
+    if (valor == NULL) {
+        return 1;
+    }
+
+    if (*total == *capacidade) {
+        int novaCapacidade = *capacidade * 2;
+        Token *temp = realloc(*tokens, (size_t)novaCapacidade * sizeof(Token));
+        if (temp == NULL) {
+            free(valor);
+            return 1;
+        }
+        *tokens = temp;
+        *capacidade = novaCapacidade;
+    }
+
+    (*tokens)[*total].tipo = tipo;
+    (*tokens)[*total].valor = valor;
+    (*total)++;
+    return 0;
+}
+
+static int fim_de_palavra(char c) {
+    return c == '\0' || isspace((unsigned char)c) ||
+           c == '"' || c == '#' || c == '$' || c == ',' || c == '>';
+}
+
 Token *tokenizar(char *linha, int *quantidadeTokens, ErroLexer *erro) {
     *erro = ERRO_NENHUM;
+    *quantidadeTokens = 0;
+
     int capacidade = 4;
     int total = 0;
 
-    Token *tokens = malloc(capacidade * sizeof(Token));
+    Token *tokens = malloc((size_t)capacidade * sizeof(Token));
     if (tokens == NULL) {
         *erro = ERRO_MEMORIA;
         return NULL;
@@ -54,153 +79,130 @@ Token *tokenizar(char *linha, int *quantidadeTokens, ErroLexer *erro) {
             break;
         }
 
-        if (total == capacidade){
-            capacidade *= 2;
-            Token *temp = realloc(tokens, capacidade * sizeof(Token));
-
-            if (temp == NULL){
-                *erro = ERRO_MEMORIA;
-                liberar_tokens(tokens, total);
-                return NULL;
-            }
-
-            tokens = temp;
+        // comentário: ignora o resto da linha
+        if (*linha == '#') {
+            break;
         }
 
-
-        Token novoToken;
-
+        // "string"
         if (*linha == '"') {
             linha++;
-            int quantCaracteres = 0;
-            while (linha[quantCaracteres] != '"' ){
-                if (linha[quantCaracteres] == '\0' || linha[quantCaracteres] == '\n'){
-                        *erro = ERRO_ASPAS_NAO_FECHADAS;
-                        liberar_tokens(tokens, total);
-                        return NULL;
+            int n = 0;
+            while (linha[n] != '"') {
+                if (linha[n] == '\0' || linha[n] == '\n') {
+                    *erro = ERRO_ASPAS_NAO_FECHADAS;
+                    liberar_tokens(tokens, total);
+                    return NULL;
                 }
-                quantCaracteres++;
+                n++;
             }
 
-            char *texto = extrair_ate(linha, quantCaracteres);
-            if (texto == NULL){
-                *erro = ERRO_MEMORIA;
-                liberar_tokens(tokens, total);
-                return NULL;
+            if (adicionar(&tokens, &total, &capacidade, TOKEN_STRING, extrair_ate(linha, n))) {
+                goto erro_memoria;
             }
-
-            novoToken.tipo = TOKEN_STRING;
-            novoToken.valor = texto;
-
-            linha += quantCaracteres + 1;
-
-        }
-        
-        else if (*linha == '#'){
-            *quantidadeTokens = total;
-            return tokens;
+            linha += n + 1;
         }
 
-        else if (*linha == '$' || *linha == '<' || *linha == '>') {
-            char *valor = extrair_ate(linha, 1);
-            if (valor == NULL) {
-                *erro = ERRO_MEMORIA;
-                liberar_tokens(tokens, total);
-                return NULL;
+        // símbolos: $  ,  >
+        else if (*linha == '$' || *linha == ',' || *linha == '>') {
+            char simbolo = *linha;
+
+            if (adicionar(&tokens, &total, &capacidade, TOKEN_SIMBOLO, extrair_ate(linha, 1))) {
+                goto erro_memoria;
             }
+            linha++;
 
-            novoToken.tipo = TOKEN_SIMBOLO;
-            novoToken.valor = valor;
+            // '>' : o resto da linha é um comando de shell, guardado sem interpretar
+            if (simbolo == '>') {
+                linha = pular_espacos(linha);
 
-            linha += 1;
+                int n = 0;
+                while (linha[n] != '\0' && linha[n] != '\n') {
+                    n++;
+                }
+                while (n > 0 && isspace((unsigned char)linha[n - 1])) {
+                    n--;
+                }
+
+                if (adicionar(&tokens, &total, &capacidade, TOKEN_BRUTO, extrair_ate(linha, n))) {
+                    goto erro_memoria;
+                }
+
+                while (*linha != '\0' && *linha != '\n') {
+                    linha++;
+                }
+            }
         }
 
+        // palavra
         else {
-            int quantCaracteres = 0;
-            while (linha[quantCaracteres] != '\n' &&
-                linha[quantCaracteres] != '\0' &&
-                linha[quantCaracteres] != '"'  &&
-                linha[quantCaracteres] != '#'  &&
-                !isspace((unsigned char)linha[quantCaracteres]) &&
-                linha[quantCaracteres] != '$'  &&
-                linha[quantCaracteres] != '<'  &&
-                linha[quantCaracteres] != '>') {
-                quantCaracteres++;
+            int n = 0;
+            while (!fim_de_palavra(linha[n])) {
+                n++;
             }
 
-            char *valor = extrair_ate(linha, quantCaracteres);
-            if (valor == NULL){
-                *erro = ERRO_MEMORIA;
-                liberar_tokens(tokens, total);
-                return NULL;
+            if (adicionar(&tokens, &total, &capacidade, TOKEN_PALAVRA, extrair_ate(linha, n))) {
+                goto erro_memoria;
             }
-
-            novoToken.tipo = TOKEN_PALAVRA;
-            novoToken.valor = valor;
-
-            linha += quantCaracteres;
-
+            linha += n;
         }
-
-        tokens[total] = novoToken;
-        total++;
     }
 
     *quantidadeTokens = total;
     return tokens;
+
+erro_memoria:
+    *erro = ERRO_MEMORIA;
+    liberar_tokens(tokens, total);
+    return NULL;
 }
 
-Instrucao *montar_instrucoes(char **linhas, int quantidadeLinhas, int *quantidadeInstrucoes, ErroLexer *erro){
+Instrucao *montar_instrucoes(char **linhas, int quantidadeLinhas, int *quantidadeInstrucoes, ErroLexer *erro) {
+    *quantidadeInstrucoes = 0;
+    *erro = ERRO_NENHUM;
+
     int capacidade = 4;
     int total = 0;
 
-    Instrucao *instrucoes = malloc(capacidade * sizeof(Instrucao));
-
-    if (instrucoes == NULL){
-        printf("ERRO: sem memória");
+    Instrucao *instrucoes = malloc((size_t)capacidade * sizeof(Instrucao));
+    if (instrucoes == NULL) {
+        *erro = ERRO_MEMORIA;
+        agl_erro(0, "sem memória");
         return NULL;
     }
 
-    for (int i = 0; i < quantidadeLinhas; i ++){
-        if (total == capacidade){
-            capacidade *= 2;
-            Instrucao *temp = realloc(instrucoes, capacidade * sizeof(Instrucao));
+    for (int i = 0; i < quantidadeLinhas; i++) {
 
-            if (temp == NULL){
+        if (total == capacidade) {
+            capacidade *= 2;
+            Instrucao *temp = realloc(instrucoes, (size_t)capacidade * sizeof(Instrucao));
+
+            if (temp == NULL) {
                 *erro = ERRO_MEMORIA;
-                for (int i = 0; i < total; i++){
-                    liberar_tokens(instrucoes[i].tokens, instrucoes[i].quantidade);
-                }
-                free(instrucoes);
+                agl_erro(0, "sem memória");
+                liberar_instrucoes(instrucoes, total);
                 return NULL;
             }
             instrucoes = temp;
         }
 
-        Instrucao novaInstrucao;
-        
-        int quantidadeTokens, numLinha = i + 1;
+        int quantidadeTokens = 0;
+        int numLinha = i + 1;
         Token *tokens = tokenizar(linhas[i], &quantidadeTokens, erro);
 
-        if (tokens == NULL){
+        if (tokens == NULL) {
             if (*erro == ERRO_ASPAS_NAO_FECHADAS) {
-                printf("Erro de Sintaxe: linha %d: aspas não fechadas\n", numLinha);
-            } else if (*erro == ERRO_MEMORIA) {
-                printf("Erro: sem memória!\n");
+                agl_erro(numLinha, "aspas não fechadas");
+            } else {
+                agl_erro(numLinha, "sem memória");
             }
-
-            for (int k = 0; k < total; k++){
-                liberar_tokens(instrucoes[k].tokens, instrucoes[k].quantidade);
-            }
-            free(instrucoes);
+            liberar_instrucoes(instrucoes, total);
             return NULL;
         }
 
-        novaInstrucao.tokens = tokens;
-        novaInstrucao.quantidade = quantidadeTokens;
-        novaInstrucao.numLinha = numLinha;
-
-        instrucoes[total] = novaInstrucao;
+        instrucoes[total].tokens = tokens;
+        instrucoes[total].quantidade = quantidadeTokens;
+        instrucoes[total].numLinha = numLinha;
         total++;
     }
 
@@ -208,8 +210,8 @@ Instrucao *montar_instrucoes(char **linhas, int quantidadeLinhas, int *quantidad
     return instrucoes;
 }
 
-void liberar_instrucoes(Instrucao *instrucoes, int total){
-    for (int i = 0; i < total; i++){
+void liberar_instrucoes(Instrucao *instrucoes, int total) {
+    for (int i = 0; i < total; i++) {
         liberar_tokens(instrucoes[i].tokens, instrucoes[i].quantidade);
     }
     free(instrucoes);
