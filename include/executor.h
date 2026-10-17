@@ -11,7 +11,7 @@ typedef enum {
 
 typedef struct {
     EstadoExecucao estado;
-    char diretorioBase[512];
+    char diretorioBase[1024];
 } Contexto;
 
 int executar(Instrucao *instrucoes, int total);
