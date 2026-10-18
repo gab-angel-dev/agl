@@ -2,7 +2,7 @@
 #include <string.h>
 #include "templates.h"
 
-#define PREFIXO_DESCRICAO "# descricao:"
+#define PREFIXO_DESCRICAO "# description:"
 
 const Template *buscar_template(const char *nome) {
     for (int i = 0; i < TOTAL_TEMPLATES; i++) {

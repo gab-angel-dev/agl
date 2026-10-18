@@ -1,0 +1,76 @@
+name: release
+
+# Ao criar uma tag de versão (git tag v0.2.0 && git push --tags),
+# compila o agl para cada sistema e publica na página de Releases.
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: build ${{ matrix.target }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - target: linux-x86_64
+            os: ubuntu-latest
+            cc: gcc
+            ldflags: -static
+          - target: linux-aarch64
+            os: ubuntu-latest
+            cc: aarch64-linux-gnu-gcc
+            ldflags: -static
+            cross: true
+          - target: macos-aarch64
+            os: macos-latest
+            cc: clang
+            ldflags: ""
+          - target: macos-x86_64
+            os: macos-latest
+            cc: clang -arch x86_64
+            ldflags: ""
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Instalar compilador cruzado (aarch64)
+        if: matrix.cross
+        run: sudo apt-get update && sudo apt-get install -y gcc-aarch64-linux-gnu
+
+      - name: Compilar
+        run: make CC="${{ matrix.cc }}" LDFLAGS="${{ matrix.ldflags }}"
+
+      - name: Empacotar
+        run: |
+          asset="agl-${{ matrix.target }}.tar.gz"
+          tar czf "$asset" agl
+          if command -v sha256sum >/dev/null 2>&1; then
+            sha256sum "$asset" > "$asset.sha256"
+          else
+            shasum -a 256 "$asset" > "$asset.sha256"
+          fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: agl-${{ matrix.target }}
+          path: |
+            agl-${{ matrix.target }}.tar.gz
+            agl-${{ matrix.target }}.tar.gz.sha256
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Criar release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" dist/* --repo "$GITHUB_REPOSITORY" --generate-notes

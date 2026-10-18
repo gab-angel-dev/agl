@@ -1,3 +1,28 @@
+# Instalação
+================================================================================================
+Linux e macOS (x86_64 e arm64):
+
+```
+curl -fsSL https://raw.githubusercontent.com/gab-angel-dev/agl/main/install.sh | sh
+```
+
+Instala em `~/.local/bin/agl`. Se essa pasta não estiver no seu PATH, o instalador mostra o comando para adicionar.
+Para atualizar, rode o mesmo comando de novo. Para desinstalar: `rm ~/.local/bin/agl`.
+
+Opções (variáveis de ambiente):
+- `AGL_VERSION=v0.2.0` instala uma versão específica
+- `AGL_INSTALL_DIR=/usr/local/bin` muda a pasta de instalação
+
+Pelo código-fonte (precisa de gcc e make):
+
+```
+git clone https://github.com/gab-angel-dev/agl.git && cd agl
+make && sudo make install
+```
+
+Windows: use o WSL. Para os comandos de venv é preciso ter `python3` com o módulo `venv`.
+
+
 # Uso
 ```
 agl run <arquivo.agl>     executa a partir do diretório atual
@@ -133,7 +158,7 @@ Arquivos `.agl` em `templates/` são embutidos no binário no `make`. A descriç
 `agl templates` vem da primeira linha do arquivo:
 
 ```
-# descricao: Projeto de dados em Python
+# description: Projeto de dados em Python
 $ start
 ...
 ```
