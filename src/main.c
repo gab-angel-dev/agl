@@ -6,7 +6,7 @@
 #include "templates.h"
 #include "util.h"
 
-#define VERSAO "0.2.0"
+#define VERSAO "0.3.0"
 #define MAX_LINHA 4096
 
 static void usar(FILE *saida) {

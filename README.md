@@ -10,7 +10,7 @@ Instala em `~/.local/bin/agl`. Se essa pasta não estiver no seu PATH, o instala
 Para atualizar, rode o mesmo comando de novo. Para desinstalar: `rm ~/.local/bin/agl`.
 
 Opções (variáveis de ambiente):
-- `AGL_VERSION=v0.2.0` instala uma versão específica
+- `AGL_VERSION=v0.3.0` instala uma versão específica
 - `AGL_INSTALL_DIR=/usr/local/bin` muda a pasta de instalação
 
 Pelo código-fonte (precisa de gcc e make):
